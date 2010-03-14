@@ -1,0 +1,33 @@
+The purpose of the pact project is to make unit-testing of node.js apps a little easier/nicer.
+
+
+What's wrong with the existing way?
+- You shouldn't need to run make/rake to find and run all tests when node.js has all the facilities 
+for a test runner.
+- It's much nicer to have pretty test-reporting, for test code hygiene, CI support, developer motivation
+- Tests could be better organized if all the tests for a module are in a single file like "module.test.js" but 
+still segregated properly within that file.
+- There's little support for the testing of asynchronous code, making it tedious.
+- I want to test browser-based apps in node.js as well! 
+
+
+
+Goals: 
+
+A TestRunner that can: 
+- find your files named x.test.js or test-x.js and run them.
+- aggregate results and then report in verbose and simple modes
+- run tests in the style of the node.js tests, as well as any new style developed for pact
+- report in clover format (for continuous integration)
+
+A TestSuite that can:
+- be used to bundle a bunch of tests together (and possibly other suites)
+- allow multiple tests in the same file
+- can be run by the pact TestRunner
+
+A Test library that can:
+- be used for better matching (ie hamcrest?)
+- be used for testing of asynchronous code
+- be used for BDD support?
+- duplicate browser capability for server-side running of browser tests
+
