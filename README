@@ -2,6 +2,7 @@ The purpose of the pact project is to make unit-testing of node.js apps a little
 
 
 What's wrong with the existing way?
+
 - You shouldn't need to run make/rake to find and run all tests when node.js has all the facilities 
 for a test runner.
 - It's much nicer to have pretty test-reporting, for test code hygiene, CI support, developer motivation
@@ -9,7 +10,6 @@ for a test runner.
 still segregated properly within that file.
 - There's little support for the testing of asynchronous code, making it tedious.
 - I want to test browser-based apps in node.js as well! 
-
 
 
 Goals: 
@@ -30,4 +30,61 @@ A Test library that can:
 - be used for testing of asynchronous code
 - be used for BDD support?
 - duplicate browser capability for server-side running of browser tests
+
+
+Usage:
+
+Create a run-tests.js file at the top of your test-code directory and dump the following into it:
+
+var TestRunner = require('../pact/TestRunner').TestRunner;
+var path = require("path");
+var sys = require("sys");
+var fs = require("fs");
+var runner = new TestRunner();
+runner.verbose = false;
+runner.findTests(fs.realpathSync('.'));
+runner.run();
+
+
+Next, run your run-tests.js and watch for output like this:
+
+____
+EF..
+
+ :(
+
+50% success 
+Total Tests: 4
+
+----------------------------------------
+Errors: 1
+Error: some new error!
+    at Object.<anonymous> (/usr/local/node/Singularity/sing-lib/bogus.test.js:4:7)
+    at Module._loadContent (node.js:753:23)
+    at Module._loadScriptSync (node.js:768:16)
+    at Module.loadSync (node.js:665:10)
+    at loadModuleSync (node.js:595:14)
+    at require (node.js:732:12)
+    at [object Object]._runTest (/usr/local/node/pact/TestRunner.js:77:4)
+    at [object Object].run (/usr/local/node/pact/TestRunner.js:152:9)
+    at Object.<anonymous> (/usr/local/node/Singularity/sing-lib/run-tests.js:9:8)
+    at Module._loadContent (node.js:753:23)
+type: undefined, arguments: undefined
+----
+
+----------------------------------------
+Failures: 1
+AssertionError: some failure
+    at Object.<anonymous> (/usr/local/node/Singularity/sing-lib/XMLHttpRequest.test.js:12:8)
+    at Module._loadContent (node.js:753:23)
+    at Module._loadScriptSync (node.js:768:16)
+    at Module.loadSync (node.js:665:10)
+    at loadModuleSync (node.js:595:14)
+    at require (node.js:732:12)
+    at [object Object]._runTest (/usr/local/node/pact/TestRunner.js:77:4)
+    at [object Object].run (/usr/local/node/pact/TestRunner.js:152:9)
+    at Object.<anonymous> (/usr/local/node/Singularity/sing-lib/run-tests.js:9:8)
+    at Module._loadContent (node.js:753:23)
+actual: false, expected: true
+----
 
