@@ -15,15 +15,16 @@ still segregated properly within that file.
 Goals: 
 
 A TestRunner that can: 
-- find your files named x.test.js or test-x.js and run them.
-- aggregate results and then report in verbose and simple modes
-- run tests in the style of the node.js tests, as well as any new style developed for pact
+- find your files named x.test.js or test-x.js and run them.  (done)
+- aggregate results and then report in verbose and simple modes  (done)
+- run tests in the style of the node.js tests, as well as any new style developed for pact (done)
 - report in clover format (for continuous integration)
 
 A TestSuite that can:
-- be used to bundle a bunch of tests together (and possibly other suites)
-- allow multiple tests in the same file
-- can be run by the pact TestRunner
+- be used to bundle a bunch of tests together (and possibly other suites)  (done)
+- allow multiple tests in the same file (done)
+- can be run by the pact TestRunner (done)
+- can be run stand-alone
 
 A Test library that can:
 - be used for better matching (ie hamcrest?)
