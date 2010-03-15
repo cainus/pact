@@ -13,14 +13,16 @@ var fs = require("fs");
 
 var runner = new TestRunner();
 //runner.verbose = true;
-runner.findTests(fs.realpathSync('.'));
+runner.findTestModules(fs.realpathSync('.'));
 runner.run();
 
 
 */
+
 exports.TestRunner = function(){
 
 	this.testFiles = [];
+	this.suiteTests = [];
 	this.failures = [];
 	this.errors = [];
 	this.verbose = false;
@@ -51,7 +53,8 @@ exports.TestRunner = function(){
 		return stat.isDirectory();
 	}
 
-	this.findTests =  function(filepath){
+	this.findTestModules =  function(filepath){
+
 		var files = fs.readdirSync(filepath);
 		for(var i = 0; i < files.length; i++){
 			if (this._isTest(files[i])){
@@ -61,28 +64,151 @@ exports.TestRunner = function(){
 		for(var i = 0; i < files.length; i++){
 			var fullpath = path.join(filepath, files[i]);
 			if (this._isDirectory(fullpath)){
-				this.findTests(fullpath);
+				this.findTestModules(fullpath);
 			}
 		}		
 	}
 
 	this.addFile = function(filename){
-		this.testFiles.push(filename);	
-	}
-	
-	this._runTest = function(filepath){
-		
-		var testPath = filepath.substring(0, filepath.length - 3);
-		try {
-			require(testPath);
-		} catch (e){
-			if (e.name == "AssertionError"){
-				this.failures.push(e);
-			} else {
-				this.errors.push(e);
-			}
+		if (this.testFiles.indexOf(filename) == -1){
+			this.testFiles.push(filename);	
 		}
 	}
+	
+	this.addSuiteTest = function(filename, testname, testCallBack){
+		this.addFile(filename);
+		sys.puts("added test: " + filename + " : " + testname);
+		this.suiteTests.push({filename:filename, testname:testname, testCallBack:testCallBack});
+	}
+
+
+	this._getTestsForSuite = function(filename){
+		var suites = [];
+		for (var i = 0; i < this.suiteTests.length; i++){
+			var testObject = this.suiteTests[i];
+			if (testObject.filename == filename){
+				suites.push(testObject);
+			}
+			
+		}
+		return suites;
+	}
+	
+	
+	this._testModule = function(filepath){
+		var testPath = filepath.substring(0, filepath.length - 3);
+		var results = [];
+		var ex = null;
+		var result = 'pass';
+		try {
+			var testscope = require(testPath);
+		} catch (ex){
+			if (ex.name == "AssertionError"){
+				result = 'fail';
+				this.failures.push(ex);
+			} else {
+				result = 'error';
+				this.errors.push(ex);
+			}
+		}
+		
+		results.push({name : '__main__', type : result, exception : ex});
+
+		// if it is a test suite...
+		if ((!!testscope) && (testscope.suite != null)){
+			var tests = testscope.suite.tests;
+			for(var x in tests){
+				var ex = null;
+				try {
+					testscope.suite.setup();
+					tests[x]();
+					result = 'pass';
+				} catch (ex) {
+					if (ex.name == "AssertionError"){
+						result = 'fail';
+						this.failures.push(ex);
+					} else {
+						result = 'error';
+						this.errors.push(ex);
+					}
+				}
+				testscope.suite.teardown();
+
+				results.push({name : x, type : result, exception : ex});
+			}					
+		}
+		
+		return results;
+			
+	}
+	
+
+	
+	
+	this.run = function(){
+		var verbose = this.verbose;
+		var errorCount = 0;
+		var failureCount = 0;
+		if (!verbose){ 
+			for(var i = 0; i < this.testFiles.length; i++){
+				sys.print("_");
+			}	
+		}
+		sys.puts("");
+		for(var i = 0; i < this.testFiles.length; i++){
+			var results = this._testModule(this.testFiles[i]);
+
+			for(var j = 0; j < results.length; j++){
+				var result = results[j];
+				if (verbose){
+					if (result['name'] == '__main__') {
+						sys.print((i + 1) + ": " + this.testFiles[i]);
+					} else {
+						sys.print(" - " + result['name']);
+					}
+				}
+				switch (result['type']){
+					case ('error'):
+						errorCount = this.errors.length;
+						if (verbose){
+							sys.puts(" - ERROR");
+						} else {
+							sys.print("E");
+						}
+					break;
+	
+					case ('fail'):
+						failureCount = this.failures.length;
+						if (verbose){
+							sys.puts(" - FAILURE");
+						} else {
+							sys.print("F");
+						}
+					break;
+	
+					default:
+						if (verbose){
+							sys.puts(" - PASS");
+						} else {
+							sys.print(".");
+						}
+				}
+			}
+		}
+
+		this.printDetailReport();
+		
+	}
+
+	this.printDetailReport = function(){
+		sys.puts(this._getSummaryInfo());
+		sys.puts("----------------------------------------");
+		sys.puts(this._getErrorInfo());
+		sys.puts("----------------------------------------");
+		sys.puts(this._getFailureInfo());
+		
+	}
+	
 	
 	this._getFailureInfo = function(){
 		var retVal = "";
@@ -129,62 +255,12 @@ exports.TestRunner = function(){
 		}
 		retVal += "\n";
 		retVal += (passCount / testCount * 100) + "% success \n";
-		retVal += "Total Tests: " + testCount + "\n";	
+		retVal += "Test Module Count : " + testCount + "\n";
+		retVal += "Error Count : " + this.errors.length + "\n";
+		retVal += "Failure Count : " + this.failures.length + "\n";
 		return retVal;
-	}
+	}	
 	
-	this.run = function(){
-		var verbose = this.verbose;
-		var errorCount = 0;
-		var failureCount = 0;
-		if (!verbose){ 
-			for(var i = 0; i < this.testFiles.length; i++){
-				sys.print("_");
-			}	
-		} else {
-			sys.puts("Attempting to run " + this.testFiles.length + " tests.");
-		}
-		sys.puts("");
-		for(var i = 0; i < this.testFiles.length; i++){
-			if (verbose) {
-				sys.print(i + ": " + this.testFiles[i]);
-			}
-			this._runTest(this.testFiles[i]);
-			switch (true){
-				case (this.errors.length != errorCount):
-					errorCount = this.errors.length;
-					if (verbose){
-						sys.puts(" - ERROR");
-					} else {
-						sys.print("E");
-					}
-				break;
-
-				case (this.failures.length != failureCount):
-					failureCount = this.failures.length;
-					if (verbose){
-						sys.puts(" - FAILURE");
-					} else {
-						sys.print("F");
-					}
-				break;
-
-				default:
-					if (verbose){
-						sys.puts(" - PASS");
-					} else {
-						sys.print(".");
-					}
-			}
-		}
-
-		
-		sys.puts(this._getSummaryInfo());
-		sys.puts("----------------------------------------");
-		sys.puts(this._getErrorInfo());
-		sys.puts("----------------------------------------");
-		sys.puts(this._getFailureInfo());
-		
-	}
-
+	
+	
 }

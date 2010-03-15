@@ -32,7 +32,7 @@ A Test library that can:
 - duplicate browser capability for server-side running of browser tests
 
 
-Usage:
+TestRunner Usage:
 
 Create a run-tests.js file at the top of your test-code directory and dump the following into it:
 
@@ -88,3 +88,20 @@ AssertionError: some failure
 actual: false, expected: true
 ----
 
+
+
+TestSuite Usage:
+
+var TestSuite = require('../../pact/TestSuite').TestSuite;
+var suite = new TestSuite();
+suite.addTests(
+	{properfail : 
+		function(){
+			assert.ok(false, "proper failure");
+		},
+				
+	 thisTooShouldPass : function(){}
+	}
+);
+
+exports.suite = suite;
