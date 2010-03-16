@@ -25,6 +25,7 @@ exports.TestRunner = function(){
 	this.suiteTests = [];
 	this.failures = [];
 	this.errors = [];
+	this.passCount = 0;
 	this.verbose = false;
 
 	this._isTest = function(filename){
@@ -77,7 +78,6 @@ exports.TestRunner = function(){
 	
 	this.addSuiteTest = function(filename, testname, testCallBack){
 		this.addFile(filename);
-		sys.puts("added test: " + filename + " : " + testname);
 		this.suiteTests.push({filename:filename, testname:testname, testCallBack:testCallBack});
 	}
 
@@ -102,6 +102,7 @@ exports.TestRunner = function(){
 		var result = 'pass';
 		try {
 			var testscope = require(testPath);
+			this.passCount += 1;
 		} catch (ex){
 			if (ex.name == "AssertionError"){
 				result = 'fail';
@@ -123,6 +124,7 @@ exports.TestRunner = function(){
 					testscope.suite.setup();
 					tests[x]();
 					result = 'pass';
+					this.passCount += 1;
 				} catch (ex) {
 					if (ex.name == "AssertionError"){
 						result = 'fail';
@@ -244,18 +246,19 @@ exports.TestRunner = function(){
 	
 	this._getSummaryInfo = function(){
 		var retVal = "";
-		var testCount = this.testFiles.length;
-		var passCount = (testCount - this.failures.length - this.errors.length);
+		var testCount = (this.passCount + this.failures.length + this.errors.length);
 		retVal += "\n";
 		retVal += "\n";
-		if (passCount == testCount){
+		if ((this.failures.length + this.errors.length) == 0){
 			retVal += " :)\n";
 		} else {
 			retVal += " :(\n";
 		}
 		retVal += "\n";
-		retVal += (passCount / testCount * 100) + "% success \n";
-		retVal += "Test Module Count : " + testCount + "\n";
+		var percentSuccess = (this.passCount / testCount * 100);
+		percentSuccess = Math.floor(percentSuccess * 100) / 100; 
+		retVal += percentSuccess + "% success \n";
+		retVal += "Test Count : " + testCount + "\n";
 		retVal += "Error Count : " + this.errors.length + "\n";
 		retVal += "Failure Count : " + this.failures.length + "\n";
 		return retVal;

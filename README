@@ -18,13 +18,13 @@ A TestRunner that can:
 - find your files named x.test.js or test-x.js and run them.  (done)
 - aggregate results and then report in verbose and simple modes  (done)
 - run tests in the style of the node.js tests, as well as any new style developed for pact (done)
-- report in clover format (for continuous integration)
+- report in clover format - for continuous integration
 
 A TestSuite that can:
-- be used to bundle a bunch of tests together (and possibly other suites)  (done)
+- be used to bundle a bunch of tests together (done)
 - allow multiple tests in the same file (done)
 - can be run by the pact TestRunner (done)
-- can be run stand-alone
+- can be run stand-alone (done)
 
 A Test library that can:
 - be used for better matching (ie hamcrest?)
@@ -91,7 +91,7 @@ actual: false, expected: true
 
 
 
-TestSuite Usage:
+TestSuite Usage (can be run stand-alone, or by the TestRunner):
 
 var TestSuite = require('../../pact/TestSuite').TestSuite;
 var suite = new TestSuite();
@@ -106,3 +106,4 @@ suite.addTests(
 );
 
 exports.suite = suite;
+suite.run();
