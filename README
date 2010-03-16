@@ -38,8 +38,6 @@ TestRunner Usage:
 Create a run-tests.js file at the top of your test-code directory and dump the following into it:
 
 var TestRunner = require('../pact/TestRunner').TestRunner;
-var path = require("path");
-var sys = require("sys");
 var fs = require("fs");
 var runner = new TestRunner();
 runner.verbose = false;
